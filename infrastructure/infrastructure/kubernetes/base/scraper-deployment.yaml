@@ -1,0 +1,79 @@
+# Scraper Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scraper-worker
+  namespace: smart-news
+  labels:
+    app: scraper
+    component: worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: scraper
+  template:
+    metadata:
+      labels:
+        app: scraper
+        component: worker
+    spec:
+      containers:
+      - name: scraper-worker
+        image: smart-news/scraper:latest
+        command: ["celery", "-A", "app.celery_app", "worker", "--loglevel=info", "--concurrency=4"]
+        env:
+        - name: RABBITMQ_HOST
+          value: "rabbitmq-service"
+        - name: POSTGRES_HOST
+          value: "postgres-service"
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: NEWS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: api-secrets
+              key: news-api-key
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+---
+# Celery Beat (Scheduler)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: celery-beat
+  namespace: smart-news
+  labels:
+    app: scraper
+    component: beat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: celery-beat
+  template:
+    metadata:
+      labels:
+        app: celery-beat
+    spec:
+      containers:
+      - name: celery-beat
+        image: smart-news/scraper:latest
+        command: ["celery", "-A", "app.celery_app", "beat", "--loglevel=info"]
+        env:
+        - name: RABBITMQ_HOST
+          value: "rabbitmq-service"
+        - name: REDIS_HOST
+          value: "redis-service"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "200m"

@@ -1,0 +1,71 @@
+# ML Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-service
+  namespace: smart-news
+  labels:
+    app: ml-service
+    component: ai
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ml-service
+  template:
+    metadata:
+      labels:
+        app: ml-service
+        component: ai
+    spec:
+      containers:
+      - name: ml-service
+        image: smart-news/ml-service:latest
+        ports:
+        - containerPort: 8001
+          name: http
+        env:
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: MODEL_PATH
+          value: "/app/saved_models"
+        resources:
+          requests:
+            memory: "1Gi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8001
+          initialDelaySeconds: 20
+          periodSeconds: 5
+        volumeMounts:
+        - name: models
+          mountPath: /app/saved_models
+      volumes:
+      - name: models
+        persistentVolumeClaim:
+          claimName: ml-models-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-service
+  namespace: smart-news
+spec:
+  selector:
+    app: ml-service
+  ports:
+  - port: 8001
+    targetPort: 8001
+    name: http
+  type: ClusterIP

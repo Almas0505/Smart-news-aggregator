@@ -1,0 +1,35 @@
+# Development Overlay
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: smart-news
+
+bases:
+  - ../../base
+
+# Development images (local)
+images:
+  - name: smart-news/backend
+    newTag: dev
+  - name: smart-news/ml-service
+    newTag: dev
+  - name: smart-news/scraper
+    newTag: dev
+  - name: smart-news/frontend
+    newTag: dev
+
+# Development labels
+commonLabels:
+  environment: development
+  tier: dev
+
+# Development-specific patches
+patchesStrategicMerge:
+  - deployment-dev.yaml
+
+# Development configuration
+configMapGenerator:
+  - name: app-config-dev
+    literals:
+      - LOG_LEVEL=DEBUG
+      - DEBUG_MODE=true

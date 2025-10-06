@@ -1,0 +1,26 @@
+# Grafana Datasources Configuration
+
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      timeInterval: "15s"
+      queryTimeout: "60s"
+    version: 1
+
+  # Elasticsearch для логов (опционально)
+  # - name: Elasticsearch
+  #   type: elasticsearch
+  #   access: proxy
+  #   url: http://elasticsearch:9200
+  #   database: "logstash-*"
+  #   jsonData:
+  #     esVersion: "8.0.0"
+  #     timeField: "@timestamp"
+  #   version: 1

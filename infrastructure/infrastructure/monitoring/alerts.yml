@@ -1,0 +1,179 @@
+# Prometheus Alert Rules for Smart News Aggregator
+
+groups:
+  - name: service_health
+    interval: 30s
+    rules:
+      # Service Down Alerts
+      - alert: ServiceDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.job }} is down"
+          description: "{{ $labels.job }} has been down for more than 2 minutes"
+
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "Memory usage is above 85% for 5 minutes"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage on {{ $labels.instance }}"
+          description: "CPU usage is above 80% for 5 minutes"
+
+  - name: api_performance
+    interval: 30s
+    rules:
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: backend
+        annotations:
+          summary: "High API latency"
+          description: "95th percentile latency is above 1 second"
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+          service: backend
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for 2 minutes"
+          error_rate: "{{ $value }}"
+
+      - alert: LowThroughput
+        expr: rate(http_requests_total[5m]) < 10
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low API throughput"
+          description: "Request rate is below 10 req/s for 10 minutes"
+
+  - name: database
+    interval: 30s
+    rules:
+      - alert: PostgreSQLDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: postgres
+        annotations:
+          summary: "PostgreSQL is down"
+          description: "PostgreSQL database is not responding"
+
+      - alert: HighDatabaseConnections
+        expr: sum(pg_stat_activity_count) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "High database connections"
+          description: "Database connection count is above 80"
+
+      - alert: SlowQueries
+        expr: rate(pg_stat_statements_mean_exec_time[5m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          service: postgres
+        annotations:
+          summary: "Slow database queries detected"
+          description: "Average query time is above 1 second"
+
+  - name: redis
+    interval: 30s
+    rules:
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache is not responding"
+
+      - alert: HighRedisMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          service: redis
+        annotations:
+          summary: "Redis memory usage high"
+          description: "Redis memory usage is above 90%"
+
+  - name: celery
+    interval: 30s
+    rules:
+      - alert: CeleryQueueBacklog
+        expr: celery_queue_length > 1000
+        for: 10m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: "Celery queue backlog"
+          description: "Celery queue has more than 1000 pending tasks"
+
+      - alert: HighTaskFailureRate
+        expr: rate(celery_task_failed_total[5m]) / rate(celery_task_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          service: celery
+        annotations:
+          summary: "High Celery task failure rate"
+          description: "Task failure rate is above 10%"
+
+  - name: ml_service
+    interval: 30s
+    rules:
+      - alert: MLServiceSlow
+        expr: histogram_quantile(0.95, rate(ml_inference_duration_seconds_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: ml
+        annotations:
+          summary: "ML inference is slow"
+          description: "95th percentile inference time is above 2 seconds"
+
+  - name: disk_space
+    interval: 30s
+    rules:
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space on {{ $labels.instance }}"
+          description: "Disk space is below 10%"
+
+      - alert: DiskSpaceCritical
+        expr: (node_filesystem_avail_bytes / node_filesystem_size_bytes) < 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Critical disk space on {{ $labels.instance }}"
+          description: "Disk space is below 5%"

@@ -1,0 +1,52 @@
+# Kubernetes Namespace for Smart News Aggregator
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: smart-news
+  labels:
+    name: smart-news
+    environment: production
+    team: engineering
+
+---
+
+# Resource Quotas (опционально)
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: smart-news-quota
+  namespace: smart-news
+spec:
+  hard:
+    requests.cpu: "20"
+    requests.memory: 40Gi
+    limits.cpu: "40"
+    limits.memory: 80Gi
+    persistentvolumeclaims: "10"
+    services: "20"
+    pods: "50"
+
+---
+
+# Limit Range (опционально)
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: smart-news-limits
+  namespace: smart-news
+spec:
+  limits:
+    - max:
+        cpu: "4"
+        memory: "8Gi"
+      min:
+        cpu: "100m"
+        memory: "128Mi"
+      default:
+        cpu: "500m"
+        memory: "512Mi"
+      defaultRequest:
+        cpu: "250m"
+        memory: "256Mi"
+      type: Container

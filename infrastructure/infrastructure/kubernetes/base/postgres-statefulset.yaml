@@ -1,0 +1,161 @@
+# PostgreSQL StatefulSet
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: smart-news
+  labels:
+    app: postgres
+spec:
+  type: ClusterIP
+  clusterIP: None  # Headless service
+  ports:
+    - port: 5432
+      targetPort: 5432
+      name: postgres
+  selector:
+    app: postgres
+
+---
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: smart-news
+spec:
+  serviceName: postgres
+  replicas: 1  # Primary only (для HA используйте patroni/stolon)
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15-alpine
+          ports:
+            - containerPort: 5432
+              name: postgres
+          
+          env:
+            - name: POSTGRES_DB
+              value: news_aggregator
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secrets
+                  key: password
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 4Gi
+          
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+          
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U $POSTGRES_USER
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U $POSTGRES_USER
+            initialDelaySeconds: 10
+            periodSeconds: 5
+  
+  # Volume Claim Template
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        storageClassName: standard  # Измените на ваш storage class
+        resources:
+          requests:
+            storage: 20Gi
+
+---
+
+# Backup CronJob (опционально)
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup
+  namespace: smart-news
+spec:
+  schedule: "0 2 * * *"  # Каждый день в 2:00
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: backup
+              image: postgres:15-alpine
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+                  pg_dump -h postgres -U $POSTGRES_USER $POSTGRES_DB | gzip > /backups/backup_$TIMESTAMP.sql.gz
+              env:
+                - name: POSTGRES_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secrets
+                      key: username
+                - name: POSTGRES_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: postgres-secrets
+                      key: password
+                - name: POSTGRES_DB
+                  value: news_aggregator
+              volumeMounts:
+                - name: backup-storage
+                  mountPath: /backups
+          restartPolicy: OnFailure
+          volumes:
+            - name: backup-storage
+              persistentVolumeClaim:
+                claimName: postgres-backup-pvc
+
+---
+
+# Backup PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-backup-pvc
+  namespace: smart-news
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: standard
+  resources:
+    requests:
+      storage: 50Gi

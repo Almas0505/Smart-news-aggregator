@@ -1,0 +1,34 @@
+# Kustomization Base Configuration
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: smart-news
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - backend-deployment.yaml
+  - ml-service-deployment.yaml
+  - scraper-deployment.yaml
+  - frontend-deployment.yaml
+  - postgres-statefulset.yaml
+  - redis-deployment.yaml
+  - rabbitmq-deployment.yaml
+  - ingress.yaml
+
+# Common labels for all resources
+commonLabels:
+  app.kubernetes.io/name: smart-news-aggregator
+  app.kubernetes.io/version: "1.0.0"
+  app.kubernetes.io/managed-by: kustomize
+
+# Images to be replaced in overlays
+images:
+  - name: smart-news/backend
+    newTag: latest
+  - name: smart-news/ml-service
+    newTag: latest
+  - name: smart-news/scraper
+    newTag: latest
+  - name: smart-news/frontend
+    newTag: latest

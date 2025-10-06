@@ -1,0 +1,81 @@
+# Kubernetes ConfigMaps for Smart News Aggregator
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-config
+  namespace: smart-news
+data:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
+  ELASTICSEARCH_HOST: "elasticsearch"
+  ELASTICSEARCH_PORT: "9200"
+  ML_SERVICE_URL: "http://ml-service:8001"
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ml-service-config
+  namespace: smart-news
+data:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  SPACY_MODEL: "en_core_web_sm"
+  EMBEDDING_MODEL: "sentence-transformers/all-MiniLM-L6-v2"
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: scraper-config
+  namespace: smart-news
+data:
+  ENVIRONMENT: "production"
+  LOG_LEVEL: "INFO"
+  CELERY_BROKER_URL: "redis://redis:6379/0"
+  CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+  BACKEND_URL: "http://backend:8000"
+  ML_SERVICE_URL: "http://ml-service:8001"
+  SCRAPE_INTERVAL_MINUTES: "30"
+  MIN_ARTICLE_LENGTH: "50"
+  BATCH_SIZE: "10"
+
+---
+
+# Prometheus Config
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: smart-news
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+    
+    scrape_configs:
+      - job_name: 'backend'
+        static_configs:
+          - targets: ['backend:8000']
+      
+      - job_name: 'ml-service'
+        static_configs:
+          - targets: ['ml-service:8001']
+
+---
+
+# IMPORTANT: Secrets должны создаваться отдельно!
+# kubectl create secret generic backend-secrets \
+#   --from-literal=database-url=postgresql://user:pass@postgres:5432/db \
+#   --from-literal=secret-key=your-secret-key \
+#   --namespace=smart-news
+
+# kubectl create secret generic scraper-secrets \
+#   --from-literal=news-api-key=your-api-key \
+#   --from-literal=backend-api-key=your-backend-key \
+#   --namespace=smart-news

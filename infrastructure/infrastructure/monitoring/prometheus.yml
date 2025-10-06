@@ -1,0 +1,115 @@
+# Prometheus Configuration for Smart News Aggregator
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'smart-news-aggregator'
+    environment: 'development'
+
+# Alertmanager configuration (опционально)
+# alerting:
+#   alertmanagers:
+#     - static_configs:
+#         - targets:
+#           - alertmanager:9093
+
+# Load rules once and periodically evaluate them
+rule_files:
+  # - "alert_rules.yml"
+
+# Scrape configurations
+scrape_configs:
+  
+  # ===== PROMETHEUS SELF-MONITORING =====
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: 'prometheus'
+
+  # ===== BACKEND SERVICE =====
+  - job_name: 'backend'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['backend:8000']
+        labels:
+          service: 'backend'
+          team: 'backend'
+    # Basic auth если защищено
+    # basic_auth:
+    #   username: 'admin'
+    #   password: 'password'
+
+  # ===== ML SERVICE =====
+  - job_name: 'ml_service'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['ml_service:8001']
+        labels:
+          service: 'ml_service'
+          team: 'ml'
+
+  # ===== POSTGRES EXPORTER =====
+  # Требует установки postgres_exporter
+  # - job_name: 'postgres'
+  #   static_configs:
+  #     - targets: ['postgres-exporter:9187']
+  #       labels:
+  #         service: 'postgres'
+
+  # ===== REDIS EXPORTER =====
+  # Требует установки redis_exporter
+  # - job_name: 'redis'
+  #   static_configs:
+  #     - targets: ['redis-exporter:9121']
+  #       labels:
+  #         service: 'redis'
+
+  # ===== NGINX =====
+  # Требует nginx-prometheus-exporter
+  # - job_name: 'nginx'
+  #   static_configs:
+  #     - targets: ['nginx-exporter:9113']
+  #       labels:
+  #         service: 'nginx'
+
+  # ===== NODE EXPORTER (system metrics) =====
+  # - job_name: 'node'
+  #   static_configs:
+  #     - targets: ['node-exporter:9100']
+  #       labels:
+  #         service: 'node'
+
+  # ===== CELERY EXPORTER =====
+  # Требует celery-exporter или flower metrics
+  # - job_name: 'celery'
+  #   static_configs:
+  #     - targets: ['flower:5555']
+  #       labels:
+  #         service: 'celery'
+
+# ===== METRICS TO TRACK =====
+#
+# Backend:
+# - http_requests_total
+# - http_request_duration_seconds
+# - active_connections
+# - database_query_duration
+#
+# ML Service:
+# - ml_predictions_total
+# - ml_prediction_duration_seconds
+# - model_load_time
+#
+# Celery:
+# - celery_tasks_total
+# - celery_task_duration_seconds
+# - celery_active_workers
+# - celery_queue_length
+#
+# System:
+# - cpu_usage
+# - memory_usage
+# - disk_usage
+# - network_io

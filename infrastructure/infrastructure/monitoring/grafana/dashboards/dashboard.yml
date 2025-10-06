@@ -1,0 +1,49 @@
+# Grafana Dashboard Provisioning
+
+apiVersion: 1
+
+providers:
+  - name: 'Smart News Dashboards'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: true
+
+# ===== DASHBOARDS TO CREATE =====
+#
+# 1. Backend Service Dashboard
+#    - Request rate
+#    - Response times
+#    - Error rate
+#    - Active connections
+#    - Database queries
+#
+# 2. ML Service Dashboard
+#    - Prediction rate
+#    - Model latency
+#    - Model accuracy
+#    - Cache hit rate
+#
+# 3. Scraper Service Dashboard
+#    - Articles scraped
+#    - Scraping duration
+#    - Success rate
+#    - Queue length
+#    - Active workers
+#
+# 4. System Dashboard
+#    - CPU usage
+#    - Memory usage
+#    - Disk I/O
+#    - Network I/O
+#
+# 5. Database Dashboard
+#    - Query performance
+#    - Connections
+#    - Lock waits
+#    - Cache hit ratio

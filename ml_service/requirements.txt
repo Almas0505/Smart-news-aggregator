@@ -1,0 +1,106 @@
+# ML/AI Service Requirements
+# Каждая библиотека объяснена детально
+
+# ===== WEB FRAMEWORK =====
+fastapi==0.109.0              # Наш API фреймворк (как в backend)
+uvicorn[standard]==0.27.0     # ASGI сервер для запуска FastAPI
+pydantic==2.5.3               # Валидация данных
+
+# ===== MACHINE LEARNING - Базовые алгоритмы =====
+scikit-learn==1.4.0           # Основная ML библиотека
+                              # Содержит: классификацию, кластеризацию, регрессию
+                              # Мы используем: TF-IDF, LogisticRegression, etc.
+
+numpy==1.26.3                 # Работа с массивами и матрицами
+                              # Все ML модели используют numpy arrays
+
+pandas==2.2.0                 # Работа с табличными данными
+                              # Для загрузки и обработки датасетов
+
+# ===== NLP - Natural Language Processing =====
+spacy==3.7.2                  # Главная NLP библиотека
+                              # Используется для: tokenization, NER, POS-tagging
+                              # Быстрая и эффективная
+
+nltk==3.8.1                   # Natural Language Toolkit
+                              # Дополнительные NLP утилиты
+                              # Stopwords, stemming, lemmatization
+
+# ===== TRANSFORMERS - Современные нейросети =====
+transformers==4.37.0          # Hugging Face Transformers
+                              # BERT, GPT, RoBERTa и другие SOTA модели
+                              # Для: classification, NER, summarization
+
+torch==2.1.2                  # PyTorch - deep learning фреймворк
+                              # Нужен для работы с transformers
+                              # CPU версия (для GPU нужна другая)
+
+sentence-transformers==2.3.1  # Специализированные embeddings модели
+                              # Создает векторные представления текста
+                              # Для semantic search и similarity
+
+# ===== TEXT PREPROCESSING =====
+textblob==0.18.0             # Простой sentiment analysis
+                              # Альтернатива для быстрого прототипирования
+
+langdetect==1.0.9            # Определение языка текста
+                              # Чтобы фильтровать не-английские новости
+
+# ===== MODEL SERVING =====
+joblib==1.3.2                # Сохранение/загрузка ML моделей
+                              # pickle для больших numpy arrays
+
+onnx==1.15.0                 # Open Neural Network Exchange
+onnxruntime==1.16.3          # Для оптимизации inference моделей
+                              # Делает модели быстрее в production
+
+# ===== HTTP CLIENT =====
+httpx==0.26.0                # Async HTTP client
+                              # Для отправки результатов в Backend
+
+aiohttp==3.9.1               # Альтернативный async HTTP
+                              # Для асинхронных запросов
+
+# ===== MONITORING & LOGGING =====
+prometheus-client==0.19.0     # Метрики для мониторинга
+                              # Количество запросов, latency, etc.
+
+python-json-logger==2.0.7     # JSON логирование
+                              # Структурированные логи
+
+# ===== CONFIGURATION =====
+python-dotenv==1.0.0         # Загрузка .env файлов
+                              # Настройки и секреты
+
+pydantic-settings==2.1.0     # Settings management
+                              # Type-safe конфигурация
+
+# ===== UTILITIES =====
+tqdm==4.66.1                 # Progress bars
+                              # Для отображения прогресса обучения
+
+rich==13.7.0                 # Красивый вывод в консоль
+                              # Для debugging
+
+# ===== TESTING =====
+pytest==7.4.4                # Testing framework
+pytest-asyncio==0.23.3       # Async tests
+
+# ===== DATA AUGMENTATION (опционально) =====
+# nlpaug==1.1.11             # Аугментация текстовых данных
+                              # Для увеличения тренировочного датасета
+
+# ===== NOTES =====
+# Для установки всех зависимостей:
+# pip install -r requirements.txt
+#
+# Для GPU версии PyTorch замените torch на:
+# torch==2.1.2+cu118 -f https://download.pytorch.org/whl/torch_stable.html
+#
+# Для установки spaCy модели (после установки requirements):
+# python -m spacy download en_core_web_sm
+# python -m spacy download en_core_web_md  # bigger model
+# python -m spacy download en_core_web_lg  # largest model
+#
+# Для NLTK данных (после установки):
+# python -c "import nltk; nltk.download('punkt'); nltk.download('stopwords')"
