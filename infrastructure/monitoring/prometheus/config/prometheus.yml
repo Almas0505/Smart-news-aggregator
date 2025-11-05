@@ -1,0 +1,28 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'backend'
+    static_configs:
+      - targets: ['backend:8000']
+
+  - job_name: 'ml_service'
+    static_configs:
+      - targets: ['ml_service:8001']
+
+  - job_name: 'scraper_worker'
+    static_configs:
+      - targets: ['scraper_worker:8002']
+
+  - job_name: 'elasticsearch'
+    static_configs:
+      - targets: ['elasticsearch:9200']
+
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']

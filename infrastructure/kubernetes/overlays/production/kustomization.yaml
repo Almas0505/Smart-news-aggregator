@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: smart-news
+
+bases:
+  - ../../base
+
+patchesStrategicMerge:
+  - backend-patch.yaml
+  - frontend-patch.yaml
+
+commonLabels:
+  environment: production
+
+replicas:
+  - name: backend
+    count: 5
+  - name: ml-service
+    count: 3
+  - name: frontend
+    count: 3
+  - name: scraper-worker
+    count: 5

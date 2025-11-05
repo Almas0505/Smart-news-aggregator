@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scraper-worker
+  namespace: smart-news
+  labels:
+    app: scraper-worker
+    tier: worker
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: scraper-worker
+  template:
+    metadata:
+      labels:
+        app: scraper-worker
+        tier: worker
+    spec:
+      containers:
+      - name: scraper-worker
+        image: smart-news/scraper-service:latest
+        command:
+        - celery
+        - -A
+        - app.celery_app
+        - worker
+        - -B
+        - --loglevel=info
+        env:
+        - name: CELERY_BROKER_URL
+          value: redis://redis:6379/0
+        - name: CELERY_RESULT_BACKEND
+          value: redis://redis:6379/0
+        - name: BACKEND_URL
+          value: http://backend:8000
+        - name: ML_SERVICE_URL
+          value: http://ml-service:8001
+        - name: NEWS_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: backend-secret
+              key: NEWS_API_KEY
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: scraper-worker-hpa
+  namespace: smart-news
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: scraper-worker
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 75

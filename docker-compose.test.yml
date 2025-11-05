@@ -1,0 +1,71 @@
+# Minimal docker-compose for testing backend only
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: test_postgres
+    environment:
+      POSTGRES_DB: news_aggregator
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - test_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: test_redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: test_backend
+    environment:
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=news_aggregator
+      - POSTGRES_PORT=5432
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/news_aggregator
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=test-secret-key-123
+      - ENVIRONMENT=development
+      - DEBUG=True
+      - API_V1_PREFIX=/api/v1
+      - FIRST_SUPERUSER_EMAIL=admin@smartnews.com
+      - FIRST_SUPERUSER_PASSWORD=changethis
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  test_postgres_data:

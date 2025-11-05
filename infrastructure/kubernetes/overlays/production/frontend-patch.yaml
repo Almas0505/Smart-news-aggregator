@@ -1,0 +1,13 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  template:
+    spec:
+      containers:
+      - name: frontend
+        image: registry.example.com/smart-news/frontend:v1.0.0
+        env:
+        - name: NEXT_PUBLIC_API_URL
+          value: https://api.smart-news.example.com

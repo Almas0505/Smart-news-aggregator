@@ -1,0 +1,164 @@
+{
+  "dashboard": {
+    "title": "Smart News - ML Service",
+    "tags": ["smart-news", "ml", "machine-learning"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Predictions Per Second",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(ml_predictions_total{job=\"ml-service\"}[5m])",
+            "legendFormat": "{{model_type}}"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Prediction Latency (p95)",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(ml_prediction_duration_seconds_bucket{job=\"ml-service\"}[5m]))",
+            "legendFormat": "{{model_type}}"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Model Load Time",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "ml_model_load_seconds{job=\"ml-service\"}",
+            "legendFormat": "{{model_type}}"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Cache Hit Rate",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(ml_cache_hits_total{job=\"ml-service\"}[5m]) / (rate(ml_cache_hits_total{job=\"ml-service\"}[5m]) + rate(ml_cache_misses_total{job=\"ml-service\"}[5m]))"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 1,
+            "unit": "percentunit"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "Total Predictions",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(ml_predictions_total{job=\"ml-service\"})"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Active Models",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16},
+        "targets": [
+          {
+            "expr": "count(ml_model_info{job=\"ml-service\"})"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "NER Predictions",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(increase(ml_predictions_total{job=\"ml-service\",model_type=\"ner\"}[1h]))"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Sentiment Analysis",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(increase(ml_predictions_total{job=\"ml-service\",model_type=\"sentiment\"}[1h]))"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Embeddings Generated",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "rate(ml_predictions_total{job=\"ml-service\",model_type=\"embeddings\"}[5m])",
+            "legendFormat": "Embeddings/sec"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Classification Accuracy",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "ml_classification_accuracy{job=\"ml-service\"}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 1,
+            "unit": "percentunit"
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "CPU Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "rate(process_cpu_seconds_total{job=\"ml-service\"}[5m])",
+            "legendFormat": "CPU Usage"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+        "targets": [
+          {
+            "expr": "process_resident_memory_bytes{job=\"ml-service\"}",
+            "legendFormat": "Memory (bytes)"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,179 @@
+{
+  "dashboard": {
+    "title": "Smart News - Scraper Service",
+    "tags": ["smart-news", "scraper", "celery"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "1m",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Articles Scraped Per Hour",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "rate(scraper_articles_scraped_total{job=\"scraper\"}[1h])",
+            "legendFormat": "{{source}}"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Scraper Run Duration",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "scraper_run_duration_seconds{job=\"scraper\"}",
+            "legendFormat": "{{source}}"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Scraper Errors",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(scraper_errors_total{job=\"scraper\"}[5m])",
+            "legendFormat": "{{source}} - {{error_type}}"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Total Articles Today",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "sum(increase(scraper_articles_scraped_total{job=\"scraper\"}[24h]))"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Active Scrapers",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 8},
+        "targets": [
+          {
+            "expr": "scraper_active_tasks{job=\"scraper\"}"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Source Health Status",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+        "targets": [
+          {
+            "expr": "scraper_source_status{job=\"scraper\"}",
+            "legendFormat": "",
+            "format": "table"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Celery Tasks - Pending",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "celery_tasks_pending{job=\"scraper\"}"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Celery Tasks - Running",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16},
+        "targets": [
+          {
+            "expr": "celery_tasks_running{job=\"scraper\"}"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Celery Workers",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "celery_workers_online{job=\"scraper\"}",
+            "legendFormat": "Workers Online"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Task Success Rate",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "rate(celery_tasks_succeeded_total{job=\"scraper\"}[5m]) / (rate(celery_tasks_succeeded_total{job=\"scraper\"}[5m]) + rate(celery_tasks_failed_total{job=\"scraper\"}[5m]))"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "min": 0,
+            "max": 1,
+            "unit": "percentunit"
+          }
+        }
+      },
+      {
+        "id": 11,
+        "title": "RSS Feeds Processed",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 28},
+        "targets": [
+          {
+            "expr": "sum(increase(scraper_rss_feeds_processed_total{job=\"scraper\"}[1h]))"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "News API Calls",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 28},
+        "targets": [
+          {
+            "expr": "sum(increase(scraper_api_calls_total{job=\"scraper\"}[1h]))"
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Duplicate Articles Skipped",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 28},
+        "targets": [
+          {
+            "expr": "sum(increase(scraper_duplicates_skipped_total{job=\"scraper\"}[1h]))"
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Rate Limit Delays",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 28},
+        "targets": [
+          {
+            "expr": "sum(increase(scraper_rate_limited_total{job=\"scraper\"}[1h]))"
+          }
+        ]
+      }
+    ]
+  }
+}
